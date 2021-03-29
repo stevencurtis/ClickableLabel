@@ -22,12 +22,13 @@ class InteractiveLinkLabel: UILabel {
     
     func configure() {
         isUserInteractionEnabled = true
+        addGestureRecognizer(UITapGestureRecognizer.init(target: self, action: #selector(labelTapped)))
     }
     
-    override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
-        
-        let superBool = super.point(inside: point, with: event)
-        
+    @objc private func labelTapped(_ recognizer: UITapGestureRecognizer) {
+
+        guard let attributedText = attributedText else { return }
+
         // Configure NSTextContainer
         let textContainer = NSTextContainer(size: bounds.size)
         textContainer.lineFragmentPadding = 0.0
@@ -38,15 +39,13 @@ class InteractiveLinkLabel: UILabel {
         let layoutManager = NSLayoutManager()
         layoutManager.addTextContainer(textContainer)
         
-        guard let attributedText = attributedText else {return false}
         
         // Configure NSTextStorage and apply the layout manager
         let textStorage = NSTextStorage(attributedString: attributedText)
-        textStorage.addAttribute(NSAttributedString.Key.font, value: font!, range: NSMakeRange(0, attributedText.length))
         textStorage.addLayoutManager(layoutManager)
         
         // get the tapped character location
-        let locationOfTouchInLabel = point
+        let locationOfTouchInLabel = recognizer.location(in: self)
         
         // account for text alignment and insets
         let textBoundingBox = layoutManager.usedRect(for: textContainer)
@@ -74,7 +73,7 @@ class InteractiveLinkLabel: UILabel {
         let rightMostPointInLineTapped = CGPoint(x: bounds.size.width, y: font.lineHeight * CGFloat(lineTapped))
         let charsInLineTapped = layoutManager.characterIndex(for: rightMostPointInLineTapped, in: textContainer, fractionOfDistanceBetweenInsertionPoints: nil)
         
-        guard characterIndex < charsInLineTapped else {return false}
+        guard characterIndex < charsInLineTapped else { return }
         
         let attributeName = NSAttributedString.Key.link
         
@@ -85,8 +84,6 @@ class InteractiveLinkLabel: UILabel {
                 UIApplication.shared.open(url)
             }
         }
-        
-        return superBool
-        
     }
+    
 }
